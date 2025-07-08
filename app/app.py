@@ -1,4 +1,7 @@
-import os, joblib, pandas as pd, streamlit as st
+import os
+import joblib
+import pandas as pd
+import streamlit as st
 
 DATA_PATH  = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw', 'civic_raw.csv')
 MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'model', 'pipe.pkl')
