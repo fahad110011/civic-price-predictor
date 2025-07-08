@@ -1,14 +1,14 @@
-import pickle
-import joblib
+import joblib            # ← MUST be joblib
 import streamlit as st
 import pandas as pd
 import os
+
 
 # 1. Load data
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw', 'civic_raw.csv')
 @st.cache_resource
 def load_model():
-    return joblib.load(MODEL_PATH)     # ← use joblib.load, not pickle.load
+    return joblib.load(MODEL_PATH)   # ← joblib.load
 
 # 2. Load model
 MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'model', 'pipe.pkl')
