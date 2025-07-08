@@ -30,12 +30,18 @@ st.title("🚗 Honda Civic Price Predictor")
 
 with st.sidebar:
     st.header("Car Features")
+       # Year slider unchanged
     year = st.slider("Year",
                      int(df.year.min()), int(df.year.max()),
                      int(df.year.median()))
-    odometer = st.slider("Odometer (miles)",
-                         int(df.odometer.min()), int(df.odometer.max()),
-                         int(df.odometer.median()), step=1_000)   # cast to int
+
+    # Clamp odometer between 0 and the 99th-percentile value, step=1 000 mi
+    odo_99 = int(df.odometer.quantile(0.99))   # e.g. ≈ 200 000
+    odo_med = int(df.odometer.median())
+    odometer = st.slider("Odometer (mi)",
+                         0, odo_99, odo_med,
+                         step=1_000)
+
     condition   = st.selectbox("Condition",
                                sorted(df.condition.dropna().unique()))
     transmission = st.selectbox("Transmission",
