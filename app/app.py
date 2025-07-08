@@ -12,7 +12,18 @@ def load_data():
 
 @st.cache_resource
 def load_model():
-    return joblib.load(MODEL_PATH)
+    pipe = joblib.load(MODEL_PATH)
+
+    # ---- hot-patch for older xgboost wheel -------------
+    try:
+        xgb = pipe.named_steps["xgb"]        # if you used a Pipeline
+    except KeyError:
+        xgb = pipe.steps[-1][1]              # last step fallback
+    if not hasattr(xgb, "gpu_id"):
+        xgb.gpu_id = -1      # -1 = use CPU; prevents AttributeError
+    # ----------------------------------------------------
+
+    return pipe
 
 df    = load_data()
 model = load_model()
