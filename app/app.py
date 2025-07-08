@@ -1,39 +1,48 @@
-import pickle
 import streamlit as st
 import pandas as pd
+import pickle
+import os
 
-# 1. Load model
+# 1. Load data
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw', 'civic_raw.csv')
+@st.cache_data
+def load_data():
+    return pd.read_csv(DATA_PATH)
+
+# 2. Load model
+MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'model', 'pipe.pkl')
 @st.cache_resource
-def load_pipeline():
-    with open("../model/pipe.pkl", "rb") as f:
+def load_model():
+    with open(MODEL_PATH, 'rb') as f:
         return pickle.load(f)
 
-pipe = load_pipeline()
-
-# 2. Page config
-st.set_page_config(page_title="Honda Civic Price Predictor", layout="centered")
-
+# 3. Build UI
 st.title("Honda Civic Price Predictor")
-st.write("Enter the details below, and click **Predict** to estimate the market price.")
+st.markdown("Enter your car’s specs and see an estimated market price!")
 
-# 3. User inputs
-year       = st.number_input("Year", min_value=1990, max_value=2025, value=2015)
-odometer   = st.slider("Mileage (miles)", min_value=0, max_value=300_000, value=50_000, step=1_000)
-condition  = st.selectbox("Condition", pipe.named_steps["pre"].named_transformers_["cat"]
-                          .categories_[0].tolist())  # replace index if needed
-trans      = st.selectbox("Transmission", pipe.named_steps["pre"].named_transformers_["cat"]
-                          .categories_[1].tolist())
-state      = st.selectbox("State", pipe.named_steps["pre"].named_transformers_["cat"]
-                          .categories_[2].tolist())
+df = load_data()
+model = load_model()
 
-# 4. Predict button
-if st.button("Predict"):
-    X = pd.DataFrame([{
-        "year": year,
-        "odometer": odometer,
-        "condition": condition,
-        "transmission": trans,
-        "state": state
+# Sidebar for inputs
+st.sidebar.header("Car Features")
+year = st.sidebar.slider("Year", int(df['year'].min()), int(df['year'].max()), int(df['year'].median()))
+odometer = st.sidebar.slider("Odometer (miles)", int(df['odometer'].min()), int(df['odometer'].max()), int(df['odometer'].median()))
+condition = st.sidebar.selectbox("Condition", sorted(df['condition'].dropna().unique()))
+transmission = st.sidebar.selectbox("Transmission", sorted(df['transmission'].dropna().unique()))
+state = st.sidebar.selectbox("State", sorted(df['state'].unique()))
+
+# 4. Predict
+if st.sidebar.button("Predict Price"):
+    X_new = pd.DataFrame([{
+        'year': year,
+        'odometer': odometer,
+        'condition': condition,
+        'transmission': transmission,
+        'state': state
     }])
-    price = pipe.predict(X)[0]
-    st.metric("Estimated Price (USD)", f"${price:,.0f}")
+    price_pred = model.predict(X_new)[0]
+    st.success(f"Estimated Price: ${price_pred:,.0f}")
+
+# 5. Optional: show raw data
+if st.checkbox("Show raw data"):
+    st.dataframe(df)
