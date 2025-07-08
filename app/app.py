@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import pickle
+import joblib
 import os
 
 # 1. Load data
@@ -12,9 +12,9 @@ def load_data():
 # 2. Load model
 MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'model', 'pipe.pkl')
 @st.cache_resource
+import joblib
 def load_model():
-    with open(MODEL_PATH, 'rb') as f:
-        return pickle.load(f)
+    return joblib.load(MODEL_PATH)
 
 # 3. Build UI
 st.title("Honda Civic Price Predictor")
